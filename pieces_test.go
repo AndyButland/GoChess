@@ -54,6 +54,16 @@ func TestPawnGetLegalSquares(t *testing.T) {
 		t.Errorf("Expected white pawn on second rank with blocking piece to have %d legal moves, but got: %d (%v)", expectedCount, len(res), res)
 	}
 	b.init()
+
+	// Test: pawn can take diagonally
+	b.movePiece(square{file: "D", rank: 7}, square{file: "D", rank: 3})
+	sq = square{file: "E", rank: 2}
+	res = p.getLegalSquares(b, sq, "W")
+	expectedCount = 3
+	if len(res) != expectedCount {
+		t.Errorf("Expected white pawn on second rank with takeable piece to have %d legal moves, but got: %d (%v)", expectedCount, len(res), res)
+	}
+	b.init()
 }
 
 func TestRookGetLegalSquares(t *testing.T) {

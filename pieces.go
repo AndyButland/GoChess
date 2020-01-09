@@ -2,6 +2,14 @@ package main
 
 import "fmt"
 
+type takingBehavior int
+
+const (
+	CannotTake takingBehavior = iota
+	CanTake
+	MustTake
+)
+
 type piece interface {
 	getName() string
 	getLegalSquares(b board, sq square, color string) []square
@@ -42,13 +50,17 @@ func (p pawn) getLegalSquares(b board, sq square, color string) []square {
 
 	// Single move forward - allowed if no blocking piece.
 	if sq.rank >= 2 && sq.rank <= 7 {
-		appended, _, squares = appendLegalSquare(squares, b, color, sq, 1*direction, 0, false)
+		appended, _, squares = appendLegalSquare(squares, b, color, sq, 1*direction, 0, CannotTake)
 	}
 
 	// Double move forward - allowed if single move was allowed, and on second rank.
 	if appended && sq.rank == secondRank {
-		appended, _, squares = appendLegalSquare(squares, b, color, sq, 2*direction, 0, false)
+		appended, _, squares = appendLegalSquare(squares, b, color, sq, 2*direction, 0, CannotTake)
 	}
+
+	// Diagonal taking moves
+	_, _, squares = appendLegalSquare(squares, b, color, sq, 1, 1, MustTake)
+	_, _, squares = appendLegalSquare(squares, b, color, sq, 1, -1, MustTake)
 
 	return squares
 }
@@ -63,7 +75,7 @@ func getLegalSquaresForRook(b board, sq square, color string) []square {
 
 	// Vertically up from current position.
 	for i := sq.rank + 1; i < BoardSize; i++ {
-		appended, willTakePiece, squares = appendLegalSquare(squares, b, color, sq, i-sq.rank, 0, true)
+		appended, willTakePiece, squares = appendLegalSquare(squares, b, color, sq, i-sq.rank, 0, CanTake)
 		if !appended || (appended && willTakePiece) {
 			break
 		}
@@ -71,7 +83,7 @@ func getLegalSquaresForRook(b board, sq square, color string) []square {
 
 	// Vertically down from current position.
 	for i := sq.rank - 1; i > 0; i-- {
-		appended, willTakePiece, squares = appendLegalSquare(squares, b, color, sq, i-sq.rank, 0, true)
+		appended, willTakePiece, squares = appendLegalSquare(squares, b, color, sq, i-sq.rank, 0, CanTake)
 		if !appended || (appended && willTakePiece) {
 			break
 		}
@@ -80,7 +92,7 @@ func getLegalSquaresForRook(b board, sq square, color string) []square {
 	// Horizonally right from current position.
 	fileNumber := fromFileStr(sq.file)
 	for i := fileNumber + 1; i < BoardSize; i++ {
-		appended, willTakePiece, squares = appendLegalSquare(squares, b, color, sq, 0, i-fileNumber, true)
+		appended, willTakePiece, squares = appendLegalSquare(squares, b, color, sq, 0, i-fileNumber, CanTake)
 		if !appended || (appended && willTakePiece) {
 			break
 		}
@@ -88,7 +100,7 @@ func getLegalSquaresForRook(b board, sq square, color string) []square {
 
 	// Horizonally left from current position.
 	for i := fileNumber - 1; i >= 0; i-- {
-		appended, willTakePiece, squares = appendLegalSquare(squares, b, color, sq, 0, i-fileNumber, true)
+		appended, willTakePiece, squares = appendLegalSquare(squares, b, color, sq, 0, i-fileNumber, CanTake)
 		if !appended || (appended && willTakePiece) {
 			break
 		}
@@ -100,14 +112,14 @@ func getLegalSquaresForRook(b board, sq square, color string) []square {
 func (p knight) getLegalSquares(b board, sq square, color string) []square {
 	var squares []square
 
-	_, _, squares = appendLegalSquare(squares, b, color, sq, 2, 1, true)
-	_, _, squares = appendLegalSquare(squares, b, color, sq, 1, 2, true)
-	_, _, squares = appendLegalSquare(squares, b, color, sq, -1, 2, true)
-	_, _, squares = appendLegalSquare(squares, b, color, sq, -2, 1, true)
-	_, _, squares = appendLegalSquare(squares, b, color, sq, -2, -1, true)
-	_, _, squares = appendLegalSquare(squares, b, color, sq, -1, -2, true)
-	_, _, squares = appendLegalSquare(squares, b, color, sq, 1, -2, true)
-	_, _, squares = appendLegalSquare(squares, b, color, sq, 2, -1, true)
+	_, _, squares = appendLegalSquare(squares, b, color, sq, 2, 1, CanTake)
+	_, _, squares = appendLegalSquare(squares, b, color, sq, 1, 2, CanTake)
+	_, _, squares = appendLegalSquare(squares, b, color, sq, -1, 2, CanTake)
+	_, _, squares = appendLegalSquare(squares, b, color, sq, -2, 1, CanTake)
+	_, _, squares = appendLegalSquare(squares, b, color, sq, -2, -1, CanTake)
+	_, _, squares = appendLegalSquare(squares, b, color, sq, -1, -2, CanTake)
+	_, _, squares = appendLegalSquare(squares, b, color, sq, 1, -2, CanTake)
+	_, _, squares = appendLegalSquare(squares, b, color, sq, 2, -1, CanTake)
 
 	return squares
 }
@@ -128,7 +140,7 @@ func getLegalSquaresForBishop(b board, sq square, color string) []square {
 		if i >= BoardSize || j > BoardSize {
 			break
 		}
-		appended, willTakePiece, squares = appendLegalSquare(squares, b, color, sq, i-sq.rank, j-fromFileStr(sq.file), true)
+		appended, willTakePiece, squares = appendLegalSquare(squares, b, color, sq, i-sq.rank, j-fromFileStr(sq.file), CanTake)
 		if !appended || (appended && willTakePiece) {
 			break
 		}
@@ -144,7 +156,7 @@ func getLegalSquaresForBishop(b board, sq square, color string) []square {
 		if i >= BoardSize || j < 0 {
 			break
 		}
-		appended, willTakePiece, squares = appendLegalSquare(squares, b, color, sq, i-sq.rank, j-fromFileStr(sq.file), true)
+		appended, willTakePiece, squares = appendLegalSquare(squares, b, color, sq, i-sq.rank, j-fromFileStr(sq.file), CanTake)
 		if !appended || (appended && willTakePiece) {
 			break
 		}
@@ -160,7 +172,7 @@ func getLegalSquaresForBishop(b board, sq square, color string) []square {
 		if i <= 0 || j >= BoardSize {
 			break
 		}
-		appended, willTakePiece, squares = appendLegalSquare(squares, b, color, sq, i-sq.rank, j-fromFileStr(sq.file), true)
+		appended, willTakePiece, squares = appendLegalSquare(squares, b, color, sq, i-sq.rank, j-fromFileStr(sq.file), CanTake)
 		if !appended || (appended && willTakePiece) {
 			break
 		}
@@ -176,7 +188,7 @@ func getLegalSquaresForBishop(b board, sq square, color string) []square {
 		if i <= 0 || j < 0 {
 			break
 		}
-		appended, willTakePiece, squares = appendLegalSquare(squares, b, color, sq, i-sq.rank, j-fromFileStr(sq.file), true)
+		appended, willTakePiece, squares = appendLegalSquare(squares, b, color, sq, i-sq.rank, j-fromFileStr(sq.file), CanTake)
 		if !appended || (appended && willTakePiece) {
 			break
 		}
@@ -198,19 +210,19 @@ func (p queen) getLegalSquares(b board, sq square, color string) []square {
 func (p king) getLegalSquares(b board, sq square, color string) []square {
 	var squares []square
 
-	_, _, squares = appendLegalSquare(squares, b, color, sq, 1, 0, true)
-	_, _, squares = appendLegalSquare(squares, b, color, sq, 1, 1, true)
-	_, _, squares = appendLegalSquare(squares, b, color, sq, 0, 1, true)
-	_, _, squares = appendLegalSquare(squares, b, color, sq, -1, 1, true)
-	_, _, squares = appendLegalSquare(squares, b, color, sq, -1, 0, true)
-	_, _, squares = appendLegalSquare(squares, b, color, sq, -1, -1, true)
-	_, _, squares = appendLegalSquare(squares, b, color, sq, 0, -1, true)
-	_, _, squares = appendLegalSquare(squares, b, color, sq, 1, -1, true)
+	_, _, squares = appendLegalSquare(squares, b, color, sq, 1, 0, CanTake)
+	_, _, squares = appendLegalSquare(squares, b, color, sq, 1, 1, CanTake)
+	_, _, squares = appendLegalSquare(squares, b, color, sq, 0, 1, CanTake)
+	_, _, squares = appendLegalSquare(squares, b, color, sq, -1, 1, CanTake)
+	_, _, squares = appendLegalSquare(squares, b, color, sq, -1, 0, CanTake)
+	_, _, squares = appendLegalSquare(squares, b, color, sq, -1, -1, CanTake)
+	_, _, squares = appendLegalSquare(squares, b, color, sq, 0, -1, CanTake)
+	_, _, squares = appendLegalSquare(squares, b, color, sq, 1, -1, CanTake)
 
 	return squares
 }
 
-func appendLegalSquare(squares []square, b board, color string, sq square, rankOffset int, fileOffset int, canTakeOppositeColorPiece bool) (bool, bool, []square) {
+func appendLegalSquare(squares []square, b board, color string, sq square, rankOffset int, fileOffset int, tb takingBehavior) (bool, bool, []square) {
 
 	if sq.rank+rankOffset <= 0 ||
 		sq.rank+rankOffset > BoardSize ||
@@ -220,12 +232,19 @@ func appendLegalSquare(squares []square, b board, color string, sq square, rankO
 	}
 
 	newSquare := square{rank: sq.rank + rankOffset, file: toFileStr(fromFileStr(sq.file) + fileOffset)}
+
 	if b.isSquareEmpty(newSquare) {
+		// If piece has to take, can't move to empty square (e.g. pawn diagonals).
+		if tb == MustTake {
+			return false, false, squares
+		}
+
+		// Otherwise if OK to move to empty square.
 		return true, false, append(squares, newSquare)
 	}
 
 	p, _ := b.getPieceAt(newSquare)
-	if p.color != color && canTakeOppositeColorPiece {
+	if p.color != color && (tb == CanTake || tb == MustTake) {
 		return true, true, append(squares, newSquare)
 	}
 

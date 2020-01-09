@@ -7,6 +7,11 @@ type piece interface {
 	getLegalSquares(b board, sq square, color string) []square
 }
 
+type coloredPiece struct {
+	piece
+	color string
+}
+
 type pawn struct{}
 type rook struct{}
 type knight struct{}
@@ -95,6 +100,73 @@ func (p knight) getLegalSquares(b board, sq square, color string) []square {
 
 func (p bishop) getLegalSquares(b board, sq square, color string) []square {
 	var squares []square
+	var appended, willTakePiece bool
+	var i, j int
+
+	// Diagonally up and right from current position.
+	i = sq.rank + 1
+	j = fromFileStr(sq.file) + 1
+	for {
+		if i >= BoardSize || j > BoardSize {
+			break
+		}
+		appended, willTakePiece, squares = appendLegalSquare(squares, b, color, sq, i-sq.rank, j-fromFileStr(sq.file), true)
+		if !appended || (appended && willTakePiece) {
+			break
+		}
+
+		i++
+		j++
+	}
+
+	// Diagonally up and left from current position.
+	i = sq.rank + 1
+	j = fromFileStr(sq.file) - 1
+	for {
+		if i >= BoardSize || j < 0 {
+			break
+		}
+		appended, willTakePiece, squares = appendLegalSquare(squares, b, color, sq, i-sq.rank, j-fromFileStr(sq.file), true)
+		if !appended || (appended && willTakePiece) {
+			break
+		}
+
+		i++
+		j--
+	}
+
+	// Diagonally down and right from current position.
+	i = sq.rank - 1
+	j = fromFileStr(sq.file) + 1
+	for {
+		if i <= 0 || j >= BoardSize {
+			break
+		}
+		appended, willTakePiece, squares = appendLegalSquare(squares, b, color, sq, i-sq.rank, j-fromFileStr(sq.file), true)
+		if !appended || (appended && willTakePiece) {
+			break
+		}
+
+		i--
+		j++
+	}
+
+	// Diagonally down and left from current position.
+	i = sq.rank - 1
+	j = fromFileStr(sq.file) - 1
+	for {
+		if i <= 0 || j < 0 {
+			break
+		}
+		appended, willTakePiece, squares = appendLegalSquare(squares, b, color, sq, i-sq.rank, j-fromFileStr(sq.file), true)
+		if !appended || (appended && willTakePiece) {
+			break
+		}
+
+		i--
+		j--
+	}
+
 	return squares
 }
 
@@ -120,11 +192,6 @@ func appendLegalSquare(squares []square, b board, color string, sq square, rankO
 	}
 
 	return false, false, squares
-}
-
-type coloredPiece struct {
-	piece
-	color string
 }
 
 func (cp coloredPiece) String() string {

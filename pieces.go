@@ -99,6 +99,16 @@ func getLegalSquaresForRook(b board, sq square, color string) []square {
 
 func (p knight) getLegalSquares(b board, sq square, color string) []square {
 	var squares []square
+
+	_, _, squares = appendLegalSquare(squares, b, color, sq, 2, 1, true)
+	_, _, squares = appendLegalSquare(squares, b, color, sq, 1, 2, true)
+	_, _, squares = appendLegalSquare(squares, b, color, sq, -1, 2, true)
+	_, _, squares = appendLegalSquare(squares, b, color, sq, -2, 1, true)
+	_, _, squares = appendLegalSquare(squares, b, color, sq, -2, -1, true)
+	_, _, squares = appendLegalSquare(squares, b, color, sq, -1, -2, true)
+	_, _, squares = appendLegalSquare(squares, b, color, sq, 1, -2, true)
+	_, _, squares = appendLegalSquare(squares, b, color, sq, 2, -1, true)
+
 	return squares
 }
 
@@ -210,7 +220,6 @@ func appendLegalSquare(squares []square, b board, color string, sq square, rankO
 	}
 
 	newSquare := square{rank: sq.rank + rankOffset, file: toFileStr(fromFileStr(sq.file) + fileOffset)}
-	fmt.Println(newSquare)
 	if b.isSquareEmpty(newSquare) {
 		return true, false, append(squares, newSquare)
 	}

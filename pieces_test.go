@@ -98,6 +98,44 @@ func TestRookGetLegalSquares(t *testing.T) {
 	b.init()
 }
 
+func TestKnightGetLegalSquares(t *testing.T) {
+	p := knight{}
+	b := board{}
+	b.init()
+
+	var sq square
+	var res []square
+	var expectedCount int
+
+	// Test: white knight in starting position has 2 legal squares
+	sq = square{file: "B", rank: 1}
+	res = p.getLegalSquares(b, sq, "W")
+	expectedCount = 2
+	if len(res) != expectedCount {
+		t.Errorf("Expected white knight in starting position to have %d legal moves, but got: %d (%v)", expectedCount, len(res), res)
+	}
+
+	// Test: white knight with spaces around (on B4 of otherwise initialised board) has legal moves:
+	b.movePiece(square{file: "B", rank: 1}, square{file: "B", rank: 4})
+	sq = square{file: "B", rank: 4}
+	res = p.getLegalSquares(b, sq, "W")
+	expectedCount = 4
+	if len(res) != expectedCount {
+		t.Errorf("Expected white knight with spaces around to have %d legal moves, but got: %d (%v)", expectedCount, len(res), res)
+	}
+	b.init()
+
+	// Test: white knight with spaces around (on B5 of otherwise initialised board) has legal moves:
+	b.movePiece(square{file: "B", rank: 1}, square{file: "B", rank: 5})
+	sq = square{file: "B", rank: 5}
+	res = p.getLegalSquares(b, sq, "W")
+	expectedCount = 6
+	if len(res) != expectedCount {
+		t.Errorf("Expected white knight with spaces around to have %d legal moves, but got: %d (%v)", expectedCount, len(res), res)
+	}
+	b.init()
+}
+
 func TestBishopGetLegalSquares(t *testing.T) {
 	p := bishop{}
 	b := board{}

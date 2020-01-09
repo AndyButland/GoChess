@@ -233,6 +233,17 @@ func TestQueenGetLegalSquares(t *testing.T) {
 		t.Errorf("Expected white queen with spaces around to have %d legal moves, but got: %d (%v)", expectedCount, len(res), res)
 	}
 	b.init()
+
+	// Test: white queen on H5 after 2 pawn moves
+	b.movePiece(square{file: "E", rank: 2}, square{file: "E", rank: 4})
+	b.movePiece(square{file: "F", rank: 7}, square{file: "E", rank: 6})
+	b.movePiece(square{file: "D", rank: 1}, square{file: "H", rank: 5})
+	sq = square{file: "H", rank: 5}
+	res = p.getLegalSquares(b, sq, "W")
+	expectedCount = 18
+	if len(res) != expectedCount {
+		t.Errorf("Expected white queen with spaces around to have %d legal moves, but got: %d (%v)", expectedCount, len(res), res)
+	}
 }
 
 func TestKingGetLegalSquares(t *testing.T) {

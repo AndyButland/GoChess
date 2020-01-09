@@ -19,6 +19,10 @@ func main() {
 
 	reader := bufio.NewReader(os.Stdin)
 	for {
+		if board.isKingInCheck(turn) {
+			fmt.Printf("The %s king is in check!\n", turn)
+		}
+
 		fmt.Printf("Select piece (%s): ", turn)
 		fromInput, _ := reader.ReadString('\n')
 		fromSquare, err := getSquareFromInput(fromInput)
@@ -48,6 +52,11 @@ func main() {
 
 		if !isMoveLegal(board, piece, fromSquare, toSquare) {
 			fmt.Println("Not a legal move.")
+			continue
+		}
+
+		if board.isKingInCheck(turn) {
+			fmt.Println("Not a legal move (your king would be in check).")
 			continue
 		}
 

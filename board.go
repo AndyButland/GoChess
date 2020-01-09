@@ -77,6 +77,45 @@ func (b *board) setSquareEmpty(row int, col int) {
 	(*b)[row][col] = coloredPiece{}
 }
 
+func (b board) isKingInCheck(color string) bool {
+	square, _ := b.getSquareForPiece(color, "K")
+
+	// To determine if king is in check, we look at legal moves for all the opponent's pieces,
+	// and if they include "taking" the king, it's in check.
+	for i := 0; i < BoardSize; i++ {
+		for j := 0; j < BoardSize; j++ {
+			if !b.isRowColEmpty(i, j) {
+				piece := b[i][j]
+				if piece.color != color {
+					legalSquares := piece.getLegalSquares(b, getSquareForRowCol(i, j), piece.color)
+					for _, sq := range legalSquares {
+						if sq.rank == square.rank && sq.file == square.file {
+							return true
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return false
+}
+
+func (b board) getSquareForPiece(color string, name string) (square, error) {
+	for i := 0; i < BoardSize; i++ {
+		for j := 0; j < BoardSize; j++ {
+			if !b.isRowColEmpty(i, j) {
+				piece := b[i][j]
+				if piece.color == color && piece.getName() == "K" {
+					return getSquareForRowCol(i, j), nil
+				}
+			}
+		}
+	}
+
+	return square{}, fmt.Errorf("Piece %s%s not found", color, name)
+}
+
 func (b board) print() {
 	fmt.Println()
 	printRankSeparator(b)
@@ -109,6 +148,10 @@ func printRankSeparator(b board) {
 
 func getRowColForSquare(sq square) (row int, col int) {
 	return BoardSize - sq.rank, fromFileStr(sq.file)
+}
+
+func getSquareForRowCol(row int, col int) square {
+	return square{file: toFileStr(col), rank: BoardSize - row}
 }
 
 func fromFileStr(s string) int {

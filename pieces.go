@@ -137,7 +137,7 @@ func getLegalSquaresForBishop(b board, sq square, color string) []square {
 	i = sq.rank + 1
 	j = fromFileStr(sq.file) + 1
 	for {
-		if i >= BoardSize || j > BoardSize {
+		if i > BoardSize || j > BoardSize {
 			break
 		}
 		appended, willTakePiece, squares = appendLegalSquare(squares, b, color, sq, i-sq.rank, j-fromFileStr(sq.file), CanTake)
@@ -153,7 +153,7 @@ func getLegalSquaresForBishop(b board, sq square, color string) []square {
 	i = sq.rank + 1
 	j = fromFileStr(sq.file) - 1
 	for {
-		if i >= BoardSize || j < 0 {
+		if i > BoardSize || j < 0 {
 			break
 		}
 		appended, willTakePiece, squares = appendLegalSquare(squares, b, color, sq, i-sq.rank, j-fromFileStr(sq.file), CanTake)

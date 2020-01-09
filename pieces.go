@@ -54,6 +54,10 @@ func (p pawn) getLegalSquares(b board, sq square, color string) []square {
 }
 
 func (p rook) getLegalSquares(b board, sq square, color string) []square {
+	return getLegalSquaresForRook(b, sq, color)
+}
+
+func getLegalSquaresForRook(b board, sq square, color string) []square {
 	var squares []square
 	var appended, willTakePiece bool
 
@@ -99,6 +103,10 @@ func (p knight) getLegalSquares(b board, sq square, color string) []square {
 }
 
 func (p bishop) getLegalSquares(b board, sq square, color string) []square {
+	return getLegalSquaresForBishop(b, sq, color)
+}
+
+func getLegalSquaresForBishop(b board, sq square, color string) []square {
 	var squares []square
 	var appended, willTakePiece bool
 	var i, j int
@@ -171,7 +179,9 @@ func (p bishop) getLegalSquares(b board, sq square, color string) []square {
 }
 
 func (p queen) getLegalSquares(b board, sq square, color string) []square {
-	var squares []square
+	// Queen legal moves are effectively rook + bishop
+	squares := getLegalSquaresForRook(b, sq, color)
+	squares = append(squares, getLegalSquaresForBishop(b, sq, color)...)
 	return squares
 }
 

@@ -73,7 +73,7 @@ func TestRookGetLegalSquares(t *testing.T) {
 		t.Errorf("Expected white rook in starting position to have %d legal moves, but got: %d (%v)", expectedCount, len(res), res)
 	}
 
-	// Test: white rook with spaces (on B4 of otherwise initialised board) around has legal moves:
+	// Test: white rook with spaces around (on B4 of otherwise initialised board) has legal moves:
 	// - 3 vertical above (two empty, one take of opponent pawn)
 	// - 1 vertical below (empty)
 	// - 7 horizontally (all empty)
@@ -82,7 +82,7 @@ func TestRookGetLegalSquares(t *testing.T) {
 	res = p.getLegalSquares(b, sq, "W")
 	expectedCount = 11
 	if len(res) != expectedCount {
-		t.Errorf("Expected white rook in with spaces around to have %d legal moves, but got: %d (%v)", expectedCount, len(res), res)
+		t.Errorf("Expected white rook with spaces around to have %d legal moves, but got: %d (%v)", expectedCount, len(res), res)
 	}
 	b.init()
 
@@ -115,7 +115,7 @@ func TestBishopGetLegalSquares(t *testing.T) {
 		t.Errorf("Expected white bishop in starting position to have %d legal moves, but got: %d (%v)", expectedCount, len(res), res)
 	}
 
-	// Test: white bishop with spaces (on B4 of otherwise initialised board) around has legal moves:
+	// Test: white bishop with spaces around (on B4 of otherwise initialised board) has legal moves:
 	// - 3 up/right (two empty, one take of opponent pawn)
 	// - 1 up/left (empty)
 	// - 1 down/right (empty)
@@ -125,7 +125,7 @@ func TestBishopGetLegalSquares(t *testing.T) {
 	res = p.getLegalSquares(b, sq, "W")
 	expectedCount = 6
 	if len(res) != expectedCount {
-		t.Errorf("Expected white bishop in with spaces around to have %d legal moves, but got: %d (%v)", expectedCount, len(res), res)
+		t.Errorf("Expected white bishop with spaces around to have %d legal moves, but got: %d (%v)", expectedCount, len(res), res)
 	}
 	b.init()
 
@@ -161,7 +161,7 @@ func TestQueenGetLegalSquares(t *testing.T) {
 	var res []square
 	var expectedCount int
 
-	// Test: white queeb in starting position has no legal squares
+	// Test: white queen in starting position has no legal squares
 	sq = square{file: "D", rank: 1}
 	res = p.getLegalSquares(b, sq, "W")
 	expectedCount = 0
@@ -169,7 +169,7 @@ func TestQueenGetLegalSquares(t *testing.T) {
 		t.Errorf("Expected white queen in starting position to have %d legal moves, but got: %d (%v)", expectedCount, len(res), res)
 	}
 
-	// Test: white queen with spaces (on B4 of otherwise initialised board) around has legal moves:
+	// Test: white queen with spaces around (on B4 of otherwise initialised board) has legal moves:
 	// - 3 vertical above (two empty, one take of opponent pawn)
 	// - 1 vertical below (empty)
 	// - 7 horizontally (all empty)
@@ -182,7 +182,48 @@ func TestQueenGetLegalSquares(t *testing.T) {
 	res = p.getLegalSquares(b, sq, "W")
 	expectedCount = 17
 	if len(res) != expectedCount {
-		t.Errorf("Expected white queen in with spaces around to have %d legal moves, but got: %d (%v)", expectedCount, len(res), res)
+		t.Errorf("Expected white queen with spaces around to have %d legal moves, but got: %d (%v)", expectedCount, len(res), res)
+	}
+	b.init()
+}
+
+func TestKingGetLegalSquares(t *testing.T) {
+	p := king{}
+	b := board{}
+	b.init()
+
+	var sq square
+	var res []square
+	var expectedCount int
+
+	// Test: white king in starting position has no legal squares
+	sq = square{file: "E", rank: 1}
+	res = p.getLegalSquares(b, sq, "W")
+	expectedCount = 0
+	if len(res) != expectedCount {
+		t.Errorf("Expected white king in starting position to have %d legal moves, but got: %d (%v)", expectedCount, len(res), res)
+	}
+
+	// Test: white king with spaces (on B4 of otherwise initialised board) around has legal moves:
+	// - 8 empty squares around
+	b.movePiece(square{file: "E", rank: 1}, square{file: "B", rank: 4})
+	sq = square{file: "B", rank: 4}
+	res = p.getLegalSquares(b, sq, "W")
+	expectedCount = 8
+	if len(res) != expectedCount {
+		t.Errorf("Expected white king with spaces around to have %d legal moves, but got: %d (%v)", expectedCount, len(res), res)
+	}
+	b.init()
+
+	// Test: white king with spaces (on B3 of otherwise initialised board) around has legal moves:
+	// - 5 empty squares around
+	// - 3 blocked by own pawns
+	b.movePiece(square{file: "E", rank: 1}, square{file: "B", rank: 3})
+	sq = square{file: "B", rank: 3}
+	res = p.getLegalSquares(b, sq, "W")
+	expectedCount = 5
+	if len(res) != expectedCount {
+		t.Errorf("Expected white king with spaces around to have %d legal moves, but got: %d (%v)", expectedCount, len(res), res)
 	}
 	b.init()
 }

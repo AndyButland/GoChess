@@ -179,7 +179,7 @@ func getLegalSquaresForBishop(b board, sq square, color string) []square {
 }
 
 func (p queen) getLegalSquares(b board, sq square, color string) []square {
-	// Queen legal moves are effectively rook + bishop
+	// Queen legal moves are effectively rook + bishop.
 	squares := getLegalSquaresForRook(b, sq, color)
 	squares = append(squares, getLegalSquaresForBishop(b, sq, color)...)
 	return squares
@@ -187,11 +187,30 @@ func (p queen) getLegalSquares(b board, sq square, color string) []square {
 
 func (p king) getLegalSquares(b board, sq square, color string) []square {
 	var squares []square
+
+	_, _, squares = appendLegalSquare(squares, b, color, sq, 1, 0, true)
+	_, _, squares = appendLegalSquare(squares, b, color, sq, 1, 1, true)
+	_, _, squares = appendLegalSquare(squares, b, color, sq, 0, 1, true)
+	_, _, squares = appendLegalSquare(squares, b, color, sq, -1, 1, true)
+	_, _, squares = appendLegalSquare(squares, b, color, sq, -1, 0, true)
+	_, _, squares = appendLegalSquare(squares, b, color, sq, -1, -1, true)
+	_, _, squares = appendLegalSquare(squares, b, color, sq, 0, -1, true)
+	_, _, squares = appendLegalSquare(squares, b, color, sq, 1, -1, true)
+
 	return squares
 }
 
 func appendLegalSquare(squares []square, b board, color string, sq square, rankOffset int, fileOffset int, canTakeOppositeColorPiece bool) (bool, bool, []square) {
+
+	if sq.rank+rankOffset <= 0 ||
+		sq.rank+rankOffset > BoardSize ||
+		fromFileStr(sq.file)+fileOffset < 0 ||
+		fromFileStr(sq.file)+fileOffset >= BoardSize {
+		return false, false, squares
+	}
+
 	newSquare := square{rank: sq.rank + rankOffset, file: toFileStr(fromFileStr(sq.file) + fileOffset)}
+	fmt.Println(newSquare)
 	if b.isSquareEmpty(newSquare) {
 		return true, false, append(squares, newSquare)
 	}

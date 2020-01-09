@@ -17,9 +17,18 @@ type square struct {
 type board [BoardSize][BoardSize]coloredPiece
 
 func (b *board) init() {
+	b.clear()
 	initPawns(b)
 	initPieces(b, "B", 0)
 	initPieces(b, "W", BoardSize-1)
+}
+
+func (b *board) clear() {
+	for i := 0; i < BoardSize; i++ {
+		for j := 0; j < BoardSize; j++ {
+			b.setSquareEmpty(i, j)
+		}
+	}
 }
 
 func initPawns(b *board) {

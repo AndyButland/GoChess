@@ -38,7 +38,7 @@ func main() {
 			continue
 		}
 
-		fmt.Printf("Select destination square: ")
+		fmt.Printf("Enter destination square: ")
 		toInput, _ := reader.ReadString('\n')
 		toSquare, err := getSquareFromInput(toInput)
 		if err != nil {
@@ -54,15 +54,8 @@ func main() {
 		board.movePiece(fromSquare, toSquare)
 		board.print()
 
-		if turn == "W" {
-			turn = "B"
-		} else {
-			turn = "W"
-		}
+		turn = switchTurn(turn)
 	}
-
-	// printLegalMovesForPiece(board, "E", 2)
-	// printLegalMovesForPiece(board, "E", 7)
 }
 
 func getSquareFromInput(entry string) (square, error) {
@@ -89,12 +82,10 @@ func isMoveLegal(b board, p coloredPiece, fromSquare square, toSquare square) bo
 	return false
 }
 
-func printLegalMovesForPiece(b board, f string, r int) {
-	sq := square{file: f, rank: r}
-	p, err := b.getPieceAt(sq)
-	if err != nil {
-		fmt.Println(err)
-		return
+func switchTurn(turn string) string {
+	if turn == "W" {
+		return "B"
 	}
-	fmt.Printf("Legal moves for %s%d: %v\n", f, r, p.getLegalSquares(b, sq, p.color))
+
+	return "W"
 }

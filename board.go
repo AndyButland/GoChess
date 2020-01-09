@@ -7,7 +7,7 @@ import (
 )
 
 const BoardSize = 8
-const Ranks = "ABCDEFGH"
+const Files = "ABCDEFGH"
 
 type square struct {
 	file string
@@ -87,7 +87,7 @@ func (b board) print() {
 
 	fmt.Printf("   ")
 	for i := 0; i < BoardSize; i++ {
-		fmt.Printf("%s  ", toRankStr(i+1))
+		fmt.Printf("%s  ", toFileStr(i))
 	}
 
 	fmt.Println()
@@ -99,13 +99,13 @@ func printRankSeparator(b board) {
 }
 
 func getRowColForSquare(sq square) (row int, col int) {
-	return BoardSize - sq.rank, fromRankStr(sq.file)
+	return BoardSize - sq.rank, fromFileStr(sq.file)
 }
 
-func fromRankStr(s string) int {
-	return strings.Index(Ranks, s)
+func fromFileStr(s string) int {
+	return strings.Index(Files, s)
 }
 
-func toRankStr(i int) string {
-	return Ranks[i-1 : i]
+func toFileStr(i int) string {
+	return Files[i : i+1]
 }

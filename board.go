@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"math"
 	"strings"
 )
 
@@ -66,6 +67,54 @@ func (b board) getPieceAt(sq square) (coloredPiece, error) {
 	return b[row][col], nil
 }
 
+func areSquaresEqual(sq1 square, sq2 square) bool {
+	return sq1.file == sq2.file && sq1.rank == sq2.rank
+}
+
+func areSquaresAdjacent(sq1 square, sq2 square) bool {
+	return math.Abs(float64(sq1.rank-sq2.rank)) <= 1 &&
+		math.Abs(float64(fromFileStr(sq1.file)-fromFileStr(sq2.file))) <= 1
+}
+
+func (b board) getSquaresBetween(sq1 square, sq2 square) []square {
+	var squares []square
+	if areSquaresEqual(sq1, sq2) || areSquaresAdjacent(sq1, sq2) {
+		return squares
+	}
+
+	minRank := minOf(sq1.rank, sq2.rank)
+	maxRank := maxOf(sq1.rank, sq2.rank)
+	minFile := minOf(fromFileStr(sq1.file), fromFileStr(sq2.file))
+	maxFile := maxOf(fromFileStr(sq1.file), fromFileStr(sq2.file))
+
+	if sq1.file == sq2.file {
+		// Vertical squares between
+		for i := minRank + 1; i < maxRank; i++ {
+			squares = append(squares, square{file: sq1.file, rank: i})
+		}
+	} else if sq1.rank == sq2.rank {
+		// Horizontal squares between
+		for i := minFile + 1; i < maxFile; i++ {
+			squares = append(squares, square{file: toFileStr(i), rank: sq1.rank})
+		}
+	} else if maxRank-minRank == maxFile-minFile {
+		// Diagonal squares between
+		var leftRightDirection int
+		if sq2.file > sq1.file {
+			leftRightDirection = 1
+		} else {
+			leftRightDirection = -1
+		}
+		count := 1
+		for i := minRank + 1; i < maxRank; i++ {
+			squares = append(squares, square{file: toFileStr(fromFileStr(sq1.file) + count*leftRightDirection), rank: i})
+			count++
+		}
+	}
+
+	return squares
+}
+
 func (b *board) movePiece(fromSquare square, toSquare square) {
 	fromRow, fromCol := getRowColForSquare(fromSquare)
 	toRow, toCol := getRowColForSquare(toSquare)
@@ -85,41 +134,62 @@ func (b board) isKingInCheck(color string) (bool, []square) {
 	return isSquareEnPrise(b, kingSquare, color)
 }
 
-func (b board) isKingInCheckMate(color string) bool {
+func (b board) isKingInCheckMate(color string) (bool, string) {
 	// If king not in check, can't be in check-mate.
 	kingInCheck, checkingSquares := b.isKingInCheck(color)
 	if !kingInCheck {
-		return false
+		return false, "Not in check"
 	}
 
 	// King is in check.  It won't be check-mate though, if:
 	kingSquare, _ := b.getSquareForPiece(color, "K")
 	king, _ := b.getPieceAt(kingSquare)
+	var opponentColor string
+	if color == "W" {
+		opponentColor = "B"
+	} else {
+		opponentColor = "W"
+	}
 
 	// - king has legal moves, and at least one moves it out of check
 	if kingCanMoveOutOfCheck(b, kingSquare, king, color) {
-		return false
+		return false, "King can move out of check"
 	}
 
-	// - OR any piece has a legal move that takes the checking piece (if there's only one of them)
+	// - OR any piece has a legal move that takes the checking piece (if there's only one of them),
+	//   unless the only piece that can take is the king, which would then still be in check)
 	if len(checkingSquares) == 1 {
-		var opponentColor string
-		if color == "W" {
-			opponentColor = "B"
-		} else {
-			opponentColor = "W"
-		}
-		isSquareEnPrise, _ := isSquareEnPrise(b, checkingSquares[0], opponentColor)
-		if isSquareEnPrise {
-			fmt.Println("Checking piece can be taken")
-			return false
+		isSquareEnPrise, takingSquares := isSquareEnPrise(b, checkingSquares[0], opponentColor)
+		if isSquareEnPrise && (len(takingSquares) > 1 || !takingPieceIsKingMovingToCheck(b, takingSquares[0], checkingSquares[0])) {
+			return false, "Checking piece can be taken"
 		}
 	}
 
-	// TODO:
 	// - OR check can be blocked by a piece
+	// -- if more than one checking piece, can't be blocked
+	if len(checkingSquares) > 1 {
+		return true, "In check, and more than one checking piece so can't block or take"
+	}
 
-	return true
+	// -- knights can't be blocked
+	checkingPiece, _ := b.getPieceAt(checkingSquares[0])
+	if checkingPiece.getName() == "N" {
+		return true, "In check, can't take and checking piece is a knight so can't be blocked"
+	}
+
+	// -- if piece is adjacent, can't be blocked
+	if math.Abs(float64(checkingSquares[0].rank-kingSquare.rank)) <= 1 &&
+		math.Abs(float64(fromFileStr(checkingSquares[0].file)-fromFileStr(kingSquare.file))) <= 1 {
+		return true, "In check, can't take and checking piece is adjacent so can't be blocked"
+	}
+
+	// -- can block if any piece has a legal move that intercepts the vertical, horizontal or
+	//    diagonal line between the single checking piece and the king
+
+	// TODO: get squares between and see if pieces can move into any of them
+	//squaresBetween := getSquaresBetween(b, kingSquare, checkingSquares[0])
+
+	return true, "In check, can't take or block"
 }
 
 func isSquareEnPrise(b board, pieceSquare square, color string) (bool, []square) {
@@ -165,6 +235,18 @@ func kingCanMoveOutOfCheck(b board, kingSquare square, k coloredPiece, color str
 	}
 
 	return false
+}
+
+func takingPieceIsKingMovingToCheck(b board, fromSquare square, toSquare square) bool {
+	takingPiece, _ := b.getPieceAt(fromSquare)
+	if takingPiece.getName() != "K" {
+		return false
+	}
+
+	tempBoard := b
+	tempBoard.movePiece(fromSquare, toSquare)
+	isKingInCheck, _ := b.isKingInCheck(takingPiece.color)
+	return isKingInCheck
 }
 
 func (b board) getSquareForPiece(color string, name string) (square, error) {

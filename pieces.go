@@ -59,8 +59,8 @@ func (p pawn) getLegalSquares(b board, sq square, color string) []square {
 	}
 
 	// Diagonal taking moves
-	_, _, squares = appendLegalSquare(squares, b, color, sq, 1, 1, MustTake)
-	_, _, squares = appendLegalSquare(squares, b, color, sq, 1, -1, MustTake)
+	_, _, squares = appendLegalSquare(squares, b, color, sq, 1*direction, 1, MustTake)
+	_, _, squares = appendLegalSquare(squares, b, color, sq, 1*direction, -1, MustTake)
 
 	return squares
 }

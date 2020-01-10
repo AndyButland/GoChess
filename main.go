@@ -16,11 +16,13 @@ func main() {
 	board.print()
 
 	color := "W"
+	kingInCheckMate := false
 	kingInCheck := false
 
 	reader := bufio.NewReader(os.Stdin)
 	for {
-		if board.isKingInCheckMate(color) {
+		kingInCheckMate, _ = board.isKingInCheckMate(color)
+		if kingInCheckMate {
 			fmt.Printf("The %s king is in checkmate. %s wins!.\n", color, switchColor(color))
 			break
 		}

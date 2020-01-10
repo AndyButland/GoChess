@@ -15,15 +15,22 @@ func main() {
 	board.init()
 	board.print()
 
-	turn := "W"
+	color := "W"
+	kingInCheck := false
 
 	reader := bufio.NewReader(os.Stdin)
 	for {
-		if board.isKingInCheck(turn) {
-			fmt.Printf("The %s king is in check!\n", turn)
+		if board.isKingInCheckMate(color) {
+			fmt.Printf("The %s king is in checkmate. %s wins!.\n", color, switchColor(color))
+			break
 		}
 
-		fmt.Printf("Select piece (%s): ", turn)
+		kingInCheck, _ = board.isKingInCheck(color)
+		if kingInCheck {
+			fmt.Printf("The %s king is in check!\n", color)
+		}
+
+		fmt.Printf("Select piece (%s): ", color)
 		fromInput, _ := reader.ReadString('\n')
 		fromSquare, err := getSquareFromInput(fromInput)
 		if err != nil {
@@ -37,8 +44,8 @@ func main() {
 			continue
 		}
 
-		if piece.color != turn {
-			fmt.Printf("Piece isn't of the correct colour (%s)\n", turn)
+		if piece.color != color {
+			fmt.Printf("Piece isn't of the correct colour (%s)\n", color)
 			continue
 		}
 
@@ -55,7 +62,8 @@ func main() {
 			continue
 		}
 
-		if board.isKingInCheck(turn) {
+		kingInCheck, _ = board.isKingInCheck(color)
+		if kingInCheck {
 			fmt.Println("Not a legal move (your king would be in check).")
 			continue
 		}
@@ -63,7 +71,7 @@ func main() {
 		board.movePiece(fromSquare, toSquare)
 		board.print()
 
-		turn = switchTurn(turn)
+		color = switchColor(color)
 	}
 }
 
@@ -91,8 +99,8 @@ func isMoveLegal(b board, p coloredPiece, fromSquare square, toSquare square) bo
 	return false
 }
 
-func switchTurn(turn string) string {
-	if turn == "W" {
+func switchColor(color string) string {
+	if color == "W" {
 		return "B"
 	}
 

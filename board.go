@@ -77,23 +77,89 @@ func (b *board) setSquareEmpty(row int, col int) {
 	(*b)[row][col] = coloredPiece{}
 }
 
-func (b board) isKingInCheck(color string) bool {
-	square, _ := b.getSquareForPiece(color, "K")
+func (b board) isKingInCheck(color string) (bool, []square) {
+	kingSquare, _ := b.getSquareForPiece(color, "K")
 
-	// To determine if king is in check, we look at legal moves for all the opponent's pieces,
-	// and if they include "taking" the king, it's in check.
+	// To determine if king is in check, we can more generally check if the piece can be "taken",
+	// i.e. is en prise.
+	return isSquareEnPrise(b, kingSquare, color)
+}
+
+func (b board) isKingInCheckMate(color string) bool {
+	// If king not in check, can't be in check-mate.
+	kingInCheck, checkingSquares := b.isKingInCheck(color)
+	if !kingInCheck {
+		return false
+	}
+
+	// King is in check.  It won't be check-mate though, if:
+	kingSquare, _ := b.getSquareForPiece(color, "K")
+	king, _ := b.getPieceAt(kingSquare)
+
+	// - king has legal moves, and at least one moves it out of check
+	if kingCanMoveOutOfCheck(b, kingSquare, king, color) {
+		return false
+	}
+
+	// - OR any piece has a legal move that takes the checking piece (if there's only one of them)
+	if len(checkingSquares) == 1 {
+		var opponentColor string
+		if color == "W" {
+			opponentColor = "B"
+		} else {
+			opponentColor = "W"
+		}
+		isSquareEnPrise, _ := isSquareEnPrise(b, checkingSquares[0], opponentColor)
+		if isSquareEnPrise {
+			fmt.Println("Checking piece can be taken")
+			return false
+		}
+	}
+
+	// TODO:
+	// - OR check can be blocked by a piece
+
+	return true
+}
+
+func isSquareEnPrise(b board, pieceSquare square, color string) (bool, []square) {
+	// To determine if a square is en prise is in check, we look at legal moves for all
+	// the opponent's pieces, and if they include the piece, it's en prise.
+	var takingSquares []square
 	for i := 0; i < BoardSize; i++ {
 		for j := 0; j < BoardSize; j++ {
 			if !b.isRowColEmpty(i, j) {
 				piece := b[i][j]
 				if piece.color != color {
-					legalSquares := piece.getLegalSquares(b, getSquareForRowCol(i, j), piece.color)
+					square := getSquareForRowCol(i, j)
+					legalSquares := piece.getLegalSquares(b, square, piece.color)
 					for _, sq := range legalSquares {
-						if sq.rank == square.rank && sq.file == square.file {
-							return true
+						if sq.rank == pieceSquare.rank && sq.file == pieceSquare.file {
+							takingSquares = append(takingSquares, square)
+							break
 						}
 					}
 				}
+			}
+		}
+	}
+
+	if (len(takingSquares)) > 0 {
+		return true, takingSquares
+	}
+
+	return false, takingSquares
+}
+
+func kingCanMoveOutOfCheck(b board, kingSquare square, k coloredPiece, color string) bool {
+	legalSquares := k.getLegalSquares(b, kingSquare, color)
+	if len(legalSquares) > 0 {
+		for _, sq := range legalSquares {
+			tempBoard := b
+			tempBoard.movePiece(kingSquare, sq)
+			movedKingInCheck, _ := tempBoard.isKingInCheck(color)
+			if !movedKingInCheck {
+				return true
 			}
 		}
 	}

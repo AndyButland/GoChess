@@ -76,7 +76,7 @@ func areSquaresAdjacent(sq1 square, sq2 square) bool {
 		math.Abs(float64(fromFileStr(sq1.file)-fromFileStr(sq2.file))) <= 1
 }
 
-func (b board) getSquaresBetween(sq1 square, sq2 square) []square {
+func getSquaresBetween(sq1 square, sq2 square) []square {
 	var squares []square
 	if areSquaresEqual(sq1, sq2) || areSquaresAdjacent(sq1, sq2) {
 		return squares
@@ -185,9 +185,23 @@ func (b board) isKingInCheckMate(color string) (bool, string) {
 
 	// -- can block if any piece has a legal move that intercepts the vertical, horizontal or
 	//    diagonal line between the single checking piece and the king
-
-	// TODO: get squares between and see if pieces can move into any of them
-	//squaresBetween := getSquaresBetween(b, kingSquare, checkingSquares[0])
+	for _, squareBetween := range getSquaresBetween(kingSquare, checkingSquares[0]) {
+		for i := 0; i < BoardSize; i++ {
+			for j := 0; j < BoardSize; j++ {
+				if !b.isRowColEmpty(i, j) {
+					piece := b[i][j]
+					if piece.color == color && piece.getName() != "K" {
+						square := getSquareForRowCol(i, j)
+						for _, legalSquare := range piece.getLegalSquares(b, square, color) {
+							if areSquaresEqual(squareBetween, legalSquare) {
+								return false, fmt.Sprintf("In check, can't take but piece %s on %v can block", piece.getName(), square)
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 
 	return true, "In check, can't take or block"
 }

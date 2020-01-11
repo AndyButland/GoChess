@@ -43,36 +43,34 @@ func TestAreSquaresAdjacent(t *testing.T) {
 }
 
 func TestGetSquaresBetween(t *testing.T) {
-	b := board{}
-
 	var expectedCount int
 	var res []square
 
-	res = b.getSquaresBetween(square{file: "A", rank: 2}, square{file: "A", rank: 6})
+	res = getSquaresBetween(square{file: "A", rank: 2}, square{file: "A", rank: 6})
 	expectedCount = 3
 	if len(res) != expectedCount {
 		t.Errorf("Expected %d vertical squares between, but got: %d (%v)", expectedCount, len(res), res)
 	}
 
-	res = b.getSquaresBetween(square{file: "A", rank: 2}, square{file: "D", rank: 2})
+	res = getSquaresBetween(square{file: "A", rank: 2}, square{file: "D", rank: 2})
 	expectedCount = 2
 	if len(res) != expectedCount {
 		t.Errorf("Expected %d horizontal squares between, but got: %d (%v)", expectedCount, len(res), res)
 	}
 
-	res = b.getSquaresBetween(square{file: "A", rank: 1}, square{file: "H", rank: 8})
+	res = getSquaresBetween(square{file: "A", rank: 1}, square{file: "H", rank: 8})
 	expectedCount = 6
 	if len(res) != expectedCount {
 		t.Errorf("Expected %d diagonal squares between, but got: %d (%v)", expectedCount, len(res), res)
 	}
 
-	res = b.getSquaresBetween(square{file: "A", rank: 1}, square{file: "H", rank: 7})
+	res = getSquaresBetween(square{file: "A", rank: 1}, square{file: "H", rank: 7})
 	expectedCount = 0
 	if len(res) != expectedCount {
 		t.Errorf("Expected %d between for non aligned squares, but got: %d (%v)", expectedCount, len(res), res)
 	}
 
-	res = b.getSquaresBetween(square{file: "A", rank: 1}, square{file: "A", rank: 1})
+	res = getSquaresBetween(square{file: "A", rank: 1}, square{file: "A", rank: 1})
 	expectedCount = 0
 	if len(res) != expectedCount {
 		t.Errorf("Expected %d between for same square, but got: %d (%v)", expectedCount, len(res), res)
@@ -247,16 +245,51 @@ func TestIsKingInCheckMate(t *testing.T) {
 	}
 	b.init()
 
-	// // Test: king in check and cannot move, checking piece cannot be taken, can block
-	// res, reason = b.isKingInCheckMate("W")
-	// if res {
-	// 	t.Errorf("King reported to be in in check-mate when in check and cannot move but checking piece can be blocked. Reason: %s", reason)
-	// }
-	// b.init()
+	// Test: king in check and cannot move, checking piece cannot be taken, can block
+	b.movePiece(square{file: "F", rank: 2}, square{file: "F", rank: 3})
+	b.movePiece(square{file: "E", rank: 7}, square{file: "E", rank: 6})
 
-	// // Test: king in check and cannot move, checking piece cannot be taken, can block
-	// res, reason = b.isKingInCheckMate("W")
-	// if !res {
-	// 	t.Errorf("King reported to not be in in check-mate but is. Reason: %s", reason)
-	// }
+	b.movePiece(square{file: "A", rank: 2}, square{file: "A", rank: 3})
+	b.movePiece(square{file: "D", rank: 8}, square{file: "H", rank: 4})
+	res, reason = b.isKingInCheckMate("W")
+	if res {
+		t.Errorf("King reported to be in in check-mate when in check and cannot move but checking piece can be blocked. Reason: %s", reason)
+	}
+	b.init()
+
+	// Test: king in check and cannot move to a non-checking square, checking piece cannot be taken,
+	// and cannot block
+	b.movePiece(square{file: "F", rank: 2}, square{file: "F", rank: 3})
+	b.movePiece(square{file: "B", rank: 8}, square{file: "C", rank: 6})
+
+	b.movePiece(square{file: "G", rank: 2}, square{file: "G", rank: 4})
+	b.movePiece(square{file: "C", rank: 6}, square{file: "D", rank: 4})
+
+	b.movePiece(square{file: "E", rank: 2}, square{file: "E", rank: 3})
+	b.movePiece(square{file: "E", rank: 7}, square{file: "E", rank: 6})
+
+	b.movePiece(square{file: "A", rank: 2}, square{file: "A", rank: 3})
+	b.movePiece(square{file: "D", rank: 8}, square{file: "H", rank: 4})
+	b.print()
+	res, reason = b.isKingInCheckMate("W")
+	if !res {
+		t.Errorf("King reported to not be in in check-mate but is. Reason: %s", reason)
+	}
+	b.init()
+
+	// Test: 4 move mate
+	b.movePiece(square{file: "E", rank: 2}, square{file: "E", rank: 4})
+	b.movePiece(square{file: "E", rank: 7}, square{file: "E", rank: 5})
+
+	b.movePiece(square{file: "F", rank: 1}, square{file: "C", rank: 4})
+	b.movePiece(square{file: "A", rank: 7}, square{file: "A", rank: 6})
+
+	b.movePiece(square{file: "D", rank: 1}, square{file: "F", rank: 3})
+	b.movePiece(square{file: "B", rank: 7}, square{file: "B", rank: 4})
+
+	b.movePiece(square{file: "F", rank: 3}, square{file: "F", rank: 7})
+	res, reason = b.isKingInCheckMate("B")
+	if !res {
+		t.Errorf("King reported to not be in in check-mate but is. Reason: %s", reason)
+	}
 }

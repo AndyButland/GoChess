@@ -90,8 +90,8 @@ func getSquareFromInput(entry string) (square, error) {
 	return square{file, rank}, nil
 }
 
-func isMoveLegal(b board, p coloredPiece, fromSquare square, toSquare square) bool {
-	legalSquares := p.getLegalSquares(b, fromSquare, p.color)
+func isMoveLegal(b board, p gamePiece, fromSquare square, toSquare square) bool {
+	legalSquares := p.getLegalSquares(b, fromSquare, p.color, p.moved)
 	for _, sq := range legalSquares {
 		if sq.rank == toSquare.rank && sq.file == toSquare.file {
 			return true

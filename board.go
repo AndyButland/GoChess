@@ -15,7 +15,7 @@ type square struct {
 	rank int
 }
 
-type board [BoardSize][BoardSize]coloredPiece
+type board [BoardSize][BoardSize]gamePiece
 
 func (b *board) init() {
 	b.clear()
@@ -34,20 +34,20 @@ func (b *board) clear() {
 
 func initPawns(b *board) {
 	for i := 0; i < BoardSize; i++ {
-		(*b)[1][i] = coloredPiece{color: "B", piece: pawn{}}
-		(*b)[6][i] = coloredPiece{color: "W", piece: pawn{}}
+		(*b)[1][i] = gamePiece{color: "B", piece: pawn{}}
+		(*b)[6][i] = gamePiece{color: "W", piece: pawn{}}
 	}
 }
 
 func initPieces(b *board, color string, row int) {
-	(*b)[row][0] = coloredPiece{color: color, piece: rook{}}
-	(*b)[row][1] = coloredPiece{color: color, piece: knight{}}
-	(*b)[row][2] = coloredPiece{color: color, piece: bishop{}}
-	(*b)[row][3] = coloredPiece{color: color, piece: queen{}}
-	(*b)[row][4] = coloredPiece{color: color, piece: king{}}
-	(*b)[row][5] = coloredPiece{color: color, piece: bishop{}}
-	(*b)[row][6] = coloredPiece{color: color, piece: knight{}}
-	(*b)[row][7] = coloredPiece{color: color, piece: rook{}}
+	(*b)[row][0] = gamePiece{color: color, piece: rook{}}
+	(*b)[row][1] = gamePiece{color: color, piece: knight{}}
+	(*b)[row][2] = gamePiece{color: color, piece: bishop{}}
+	(*b)[row][3] = gamePiece{color: color, piece: queen{}}
+	(*b)[row][4] = gamePiece{color: color, piece: king{}}
+	(*b)[row][5] = gamePiece{color: color, piece: bishop{}}
+	(*b)[row][6] = gamePiece{color: color, piece: knight{}}
+	(*b)[row][7] = gamePiece{color: color, piece: rook{}}
 }
 
 func (b board) isSquareEmpty(sq square) bool {
@@ -55,12 +55,12 @@ func (b board) isSquareEmpty(sq square) bool {
 }
 
 func (b board) isRowColEmpty(row int, col int) bool {
-	return (coloredPiece{}) == b[row][col]
+	return (gamePiece{}) == b[row][col]
 }
 
-func (b board) getPieceAt(sq square) (coloredPiece, error) {
+func (b board) getPieceAt(sq square) (gamePiece, error) {
 	if b.isSquareEmpty(sq) {
-		return coloredPiece{}, errors.New("No piece found at square")
+		return gamePiece{}, errors.New("No piece found at square")
 	}
 
 	row, col := getRowColForSquare(sq)
@@ -115,15 +115,31 @@ func getSquaresBetween(sq1 square, sq2 square) []square {
 	return squares
 }
 
+func (b board) areEmptySquaresBetween(sq1 square, sq2 square) bool {
+	squares := getSquaresBetween(sq1, sq2)
+	if len(squares) == 0 {
+		return false
+	}
+
+	for _, sq := range squares {
+		if !b.isSquareEmpty(sq) {
+			return false
+		}
+	}
+
+	return true
+}
+
 func (b *board) movePiece(fromSquare square, toSquare square) {
 	fromRow, fromCol := getRowColForSquare(fromSquare)
 	toRow, toCol := getRowColForSquare(toSquare)
 	(*b)[toRow][toCol] = (*b)[fromRow][fromCol]
+	(*b)[toRow][toCol].moved = true
 	b.setSquareEmpty(fromRow, fromCol)
 }
 
 func (b *board) setSquareEmpty(row int, col int) {
-	(*b)[row][col] = coloredPiece{}
+	(*b)[row][col] = gamePiece{}
 }
 
 func (b board) isKingInCheck(color string) (bool, []square) {
@@ -192,7 +208,7 @@ func (b board) isKingInCheckMate(color string) (bool, string) {
 					piece := b[i][j]
 					if piece.color == color && piece.getName() != "K" {
 						square := getSquareForRowCol(i, j)
-						for _, legalSquare := range piece.getLegalSquares(b, square, color) {
+						for _, legalSquare := range piece.getLegalSquares(b, square, piece.color, piece.moved) {
 							if areSquaresEqual(squareBetween, legalSquare) {
 								return false, fmt.Sprintf("In check, can't take but piece %s on %v can block", piece.getName(), square)
 							}
@@ -216,7 +232,7 @@ func isSquareEnPrise(b board, pieceSquare square, color string) (bool, []square)
 				piece := b[i][j]
 				if piece.color != color {
 					square := getSquareForRowCol(i, j)
-					legalSquares := piece.getLegalSquares(b, square, piece.color)
+					legalSquares := piece.getLegalSquares(b, square, piece.color, piece.moved)
 					for _, sq := range legalSquares {
 						if sq.rank == pieceSquare.rank && sq.file == pieceSquare.file {
 							takingSquares = append(takingSquares, square)
@@ -235,8 +251,8 @@ func isSquareEnPrise(b board, pieceSquare square, color string) (bool, []square)
 	return false, takingSquares
 }
 
-func kingCanMoveOutOfCheck(b board, kingSquare square, k coloredPiece, color string) bool {
-	legalSquares := k.getLegalSquares(b, kingSquare, color)
+func kingCanMoveOutOfCheck(b board, kingSquare square, k gamePiece, color string) bool {
+	legalSquares := k.getLegalSquares(b, kingSquare, color, k.moved)
 	if len(legalSquares) > 0 {
 		for _, sq := range legalSquares {
 			tempBoard := b

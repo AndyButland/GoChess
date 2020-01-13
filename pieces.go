@@ -12,12 +12,17 @@ const (
 
 type piece interface {
 	getName() string
-	getLegalSquares(b board, sq square, color string) []square
+	getLegalSquares(b board, sq square, color string, moved bool) []square
 }
 
-type coloredPiece struct {
+type gamePiece struct {
 	piece
 	color string
+	moved bool
+}
+
+func (gp gamePiece) String() string {
+	return fmt.Sprintf("%s%s", gp.color, gp.piece.getName())
 }
 
 type pawn struct{}
@@ -34,7 +39,7 @@ func (p bishop) getName() string { return "B" }
 func (p queen) getName() string  { return "Q" }
 func (p king) getName() string   { return "K" }
 
-func (p pawn) getLegalSquares(b board, sq square, color string) []square {
+func (p pawn) getLegalSquares(b board, sq square, color string, moved bool) []square {
 	var squares []square
 	var appended bool
 	var direction int
@@ -65,7 +70,7 @@ func (p pawn) getLegalSquares(b board, sq square, color string) []square {
 	return squares
 }
 
-func (p rook) getLegalSquares(b board, sq square, color string) []square {
+func (p rook) getLegalSquares(b board, sq square, color string, moved bool) []square {
 	return getLegalSquaresForRook(b, sq, color)
 }
 
@@ -109,7 +114,7 @@ func getLegalSquaresForRook(b board, sq square, color string) []square {
 	return squares
 }
 
-func (p knight) getLegalSquares(b board, sq square, color string) []square {
+func (p knight) getLegalSquares(b board, sq square, color string, moved bool) []square {
 	var squares []square
 
 	_, _, squares = appendLegalSquare(squares, b, color, sq, 2, 1, CanTake)
@@ -124,7 +129,7 @@ func (p knight) getLegalSquares(b board, sq square, color string) []square {
 	return squares
 }
 
-func (p bishop) getLegalSquares(b board, sq square, color string) []square {
+func (p bishop) getLegalSquares(b board, sq square, color string, moved bool) []square {
 	return getLegalSquaresForBishop(b, sq, color)
 }
 
@@ -200,16 +205,17 @@ func getLegalSquaresForBishop(b board, sq square, color string) []square {
 	return squares
 }
 
-func (p queen) getLegalSquares(b board, sq square, color string) []square {
+func (p queen) getLegalSquares(b board, sq square, color string, moved bool) []square {
 	// Queen legal moves are effectively rook + bishop.
 	squares := getLegalSquaresForRook(b, sq, color)
 	squares = append(squares, getLegalSquaresForBishop(b, sq, color)...)
 	return squares
 }
 
-func (p king) getLegalSquares(b board, sq square, color string) []square {
+func (p king) getLegalSquares(b board, sq square, color string, moved bool) []square {
 	var squares []square
 
+	// Single square moves
 	_, _, squares = appendLegalSquare(squares, b, color, sq, 1, 0, CanTake)
 	_, _, squares = appendLegalSquare(squares, b, color, sq, 1, 1, CanTake)
 	_, _, squares = appendLegalSquare(squares, b, color, sq, 0, 1, CanTake)
@@ -219,7 +225,55 @@ func (p king) getLegalSquares(b board, sq square, color string) []square {
 	_, _, squares = appendLegalSquare(squares, b, color, sq, 0, -1, CanTake)
 	_, _, squares = appendLegalSquare(squares, b, color, sq, 1, -1, CanTake)
 
+	// Castling
+	// - king that has moved cannot castle
+	if moved {
+		return squares
+	}
+
+	rookSquares := getRookSquaresForKing(b, sq)
+	if canCastle(b, sq, rookSquares[0], color) {
+		_, _, squares = appendLegalSquare(squares, b, color, sq, 0, -2, CannotTake)
+	}
+	if canCastle(b, sq, rookSquares[1], color) {
+		_, _, squares = appendLegalSquare(squares, b, color, sq, 0, 2, CannotTake)
+	}
+
 	return squares
+}
+
+func getRookSquaresForKing(b board, kingSquare square) [2]square {
+	result := [2]square{}
+	result[0] = square{file: toFileStr(0), rank: kingSquare.rank}
+	result[1] = square{file: toFileStr(BoardSize - 1), rank: kingSquare.rank}
+	return result
+}
+
+func canCastle(b board, kingSquare square, rookSquare square, color string) bool {
+	// Must have an unmoved rook to castle with.
+	if b.isSquareEmpty(rookSquare) {
+		return false
+	}
+
+	piece, _ := b.getPieceAt(rookSquare)
+	if piece.getName() != "R" || piece.moved {
+		return false
+	}
+
+	// Can't be any blocking pieces.
+	if !b.areEmptySquaresBetween(kingSquare, rookSquare) {
+		return false
+	}
+
+	// Can't castle through check
+	for _, sq := range getSquaresBetween(kingSquare, rookSquare) {
+		isSquareEnPrise, _ := isSquareEnPrise(b, sq, color)
+		if isSquareEnPrise {
+			return false
+		}
+	}
+
+	return true
 }
 
 func appendLegalSquare(squares []square, b board, color string, sq square, rankOffset int, fileOffset int, tb takingBehavior) (bool, bool, []square) {
@@ -249,8 +303,4 @@ func appendLegalSquare(squares []square, b board, color string, sq square, rankO
 	}
 
 	return false, false, squares
-}
-
-func (cp coloredPiece) String() string {
-	return fmt.Sprintf("%s%s", cp.color, cp.piece.getName())
 }

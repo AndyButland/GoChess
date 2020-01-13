@@ -17,12 +17,20 @@ type piece interface {
 
 type gamePiece struct {
 	piece
-	color string
-	moved bool
+	color     string
+	moved     bool
+	justMoved bool
 }
 
 func (gp gamePiece) String() string {
-	return fmt.Sprintf("%s%s", gp.color, gp.piece.getName())
+	l := " "
+	if gp.moved {
+		l = "*"
+	}
+	if gp.justMoved {
+		l = "+"
+	}
+	return fmt.Sprintf("%s%s%s", gp.color, gp.piece.getName(), l)
 }
 
 type pawn struct{}

@@ -131,15 +131,27 @@ func (b board) areEmptySquaresBetween(sq1 square, sq2 square) bool {
 }
 
 func (b *board) movePiece(fromSquare square, toSquare square) {
+	b.resetJustMovedPiece()
 	fromRow, fromCol := getRowColForSquare(fromSquare)
 	toRow, toCol := getRowColForSquare(toSquare)
-	piece := (*b)[fromRow][fromCol]
-	(*b)[toRow][toCol] = piece
-	piece.moved = true
+
+	(*b)[toRow][toCol] = b[fromRow][fromCol]
+	(*b)[toRow][toCol].moved = true
+	(*b)[toRow][toCol].justMoved = true
 	b.setSquareEmpty(fromRow, fromCol)
 
-	if isCastling(piece, fromCol, toCol) {
+	if isCastling(b[toRow][toCol], fromCol, toCol) {
 		moveCastledRook(b, fromRow, toCol)
+	}
+}
+
+func (b *board) resetJustMovedPiece() {
+	for i := 0; i < BoardSize; i++ {
+		for j := 0; j < BoardSize; j++ {
+			if !b.isRowColEmpty(i, j) && b[i][j].justMoved {
+				(*b)[i][j].justMoved = false
+			}
+		}
 	}
 }
 
@@ -324,9 +336,9 @@ func (b board) print() {
 		fmt.Printf("%d ", BoardSize-i)
 		for j := 0; j < BoardSize; j++ {
 			if b.isRowColEmpty(i, j) {
-				fmt.Printf("|  ")
+				fmt.Printf("|   ")
 			} else {
-				fmt.Printf("|%2s", b[i][j])
+				fmt.Printf("|%3s", b[i][j])
 			}
 		}
 
@@ -336,7 +348,7 @@ func (b board) print() {
 
 	fmt.Printf("   ")
 	for i := 0; i < BoardSize; i++ {
-		fmt.Printf("%s  ", toFileStr(i))
+		fmt.Printf("%s   ", toFileStr(i))
 	}
 
 	fmt.Println()
@@ -344,7 +356,7 @@ func (b board) print() {
 }
 
 func printRankSeparator(b board) {
-	fmt.Println("  " + strings.Repeat("-", BoardSize*3+1))
+	fmt.Println("  " + strings.Repeat("-", BoardSize*4+1))
 }
 
 func getRowColForSquare(sq square) (row int, col int) {

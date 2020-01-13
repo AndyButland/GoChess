@@ -133,9 +133,32 @@ func (b board) areEmptySquaresBetween(sq1 square, sq2 square) bool {
 func (b *board) movePiece(fromSquare square, toSquare square) {
 	fromRow, fromCol := getRowColForSquare(fromSquare)
 	toRow, toCol := getRowColForSquare(toSquare)
-	(*b)[toRow][toCol] = (*b)[fromRow][fromCol]
-	(*b)[toRow][toCol].moved = true
+	piece := (*b)[fromRow][fromCol]
+	(*b)[toRow][toCol] = piece
+	piece.moved = true
 	b.setSquareEmpty(fromRow, fromCol)
+
+	if isCastling(piece, fromCol, toCol) {
+		moveCastledRook(b, fromRow, toCol)
+	}
+}
+
+func isCastling(gp gamePiece, fromCol int, toCol int) bool {
+	return gp.getName() == "K" && math.Abs(float64(fromCol)-float64(toCol)) == 2
+}
+
+func moveCastledRook(b *board, row int, kingCol int) {
+	var currentSquare square
+	var newSquare square
+	if kingCol > BoardSize/2 {
+		currentSquare = square{rank: BoardSize - row, file: toFileStr(BoardSize - 1)}
+		newSquare = square{rank: BoardSize - row, file: toFileStr(kingCol - 1)}
+	} else {
+		currentSquare = square{rank: BoardSize - row, file: toFileStr(0)}
+		newSquare = square{rank: BoardSize - row, file: toFileStr(kingCol + 1)}
+	}
+
+	b.movePiece(currentSquare, newSquare)
 }
 
 func (b *board) setSquareEmpty(row int, col int) {

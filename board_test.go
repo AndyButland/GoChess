@@ -270,7 +270,6 @@ func TestIsKingInCheckMate(t *testing.T) {
 
 	b.movePiece(square{file: "A", rank: 2}, square{file: "A", rank: 3})
 	b.movePiece(square{file: "D", rank: 8}, square{file: "H", rank: 4})
-	b.print()
 	res, reason = b.isKingInCheckMate("W")
 	if !res {
 		t.Errorf("King reported to not be in in check-mate but is. Reason: %s", reason)

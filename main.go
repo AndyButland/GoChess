@@ -71,6 +71,13 @@ func main() {
 		}
 
 		board.movePiece(fromSquare, toSquare)
+
+		if pawnIsPromoted(piece, toSquare) {
+			fmt.Printf("Promoted pawn. Promote to (Q, R, B, N)? ")
+			promoteInput, _ := reader.ReadString('\n')
+			board.addPieceAt(toSquare, strings.ToUpper(promoteInput[0:1]), color)
+		}
+
 		board.print()
 
 		color = switchColor(color)
@@ -99,6 +106,10 @@ func isMoveLegal(b board, p gamePiece, fromSquare square, toSquare square) bool 
 	}
 
 	return false
+}
+
+func pawnIsPromoted(p gamePiece, sq square) bool {
+	return p.getName() == "P" && (sq.rank == 1 || sq.rank == 8)
 }
 
 func switchColor(color string) string {

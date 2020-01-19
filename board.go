@@ -67,6 +67,34 @@ func (b board) getPieceAt(sq square) (gamePiece, error) {
 	return b[row][col], nil
 }
 
+func (b *board) addPieceAt(sq square, name string, color string) {
+	row, col := getRowColForSquare(sq)
+	b.setSquareEmpty(row, col)
+
+	piece, _ := getPieceFromName(name)
+	gp := gamePiece{color: color, piece: piece}
+	(*b)[row][col] = gp
+}
+
+func getPieceFromName(name string) (piece, error) {
+	switch name {
+	case "K":
+		return king{}, nil
+	case "Q":
+		return queen{}, nil
+	case "R":
+		return rook{}, nil
+	case "B":
+		return bishop{}, nil
+	case "N":
+		return knight{}, nil
+	case "P":
+		return pawn{}, nil
+	default:
+		return nil, errors.New("Name not recognised (must be one of K, Q, R, B, N or P).")
+	}
+}
+
 func areSquaresEqual(sq1 square, sq2 square) bool {
 	return sq1.file == sq2.file && sq1.rank == sq2.rank
 }

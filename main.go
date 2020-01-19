@@ -64,8 +64,8 @@ func main() {
 			continue
 		}
 
-		kingInCheck, _ = board.isKingInCheck(color)
-		if kingInCheck {
+		wouldKingBeInCheck := wouldKingBeInCheck(board, fromSquare, toSquare, color)
+		if wouldKingBeInCheck {
 			fmt.Println("Not a legal move (your king would be in check).")
 			continue
 		}
@@ -106,6 +106,13 @@ func isMoveLegal(b board, p gamePiece, fromSquare square, toSquare square) bool 
 	}
 
 	return false
+}
+
+func wouldKingBeInCheck(b board, fromSquare square, toSquare square, color string) bool {
+	tempBoard := b
+	tempBoard.movePiece(fromSquare, toSquare)
+	kingInCheck, _ := tempBoard.isKingInCheck(color)
+	return kingInCheck
 }
 
 func pawnIsPromoted(p gamePiece, sq square) bool {

@@ -131,26 +131,25 @@ func (b board) areEmptySquaresBetween(sq1 square, sq2 square) bool {
 }
 
 func (b *board) movePiece(fromSquare square, toSquare square) {
-	b.resetJustMovedPiece()
 	fromRow, fromCol := getRowColForSquare(fromSquare)
 	toRow, toCol := getRowColForSquare(toSquare)
 
+	isDestinationSquareEmpty := b.isSquareEmpty(toSquare)
+
 	(*b)[toRow][toCol] = b[fromRow][fromCol]
 	(*b)[toRow][toCol].moved = true
-	(*b)[toRow][toCol].justMoved = true
+	(*b)[toRow][toCol].numberOfMoves++
 	b.setSquareEmpty(fromRow, fromCol)
 
 	if isCastling(b[toRow][toCol], fromCol, toCol) {
 		moveCastledRook(b, fromRow, toCol)
 	}
-}
 
-func (b *board) resetJustMovedPiece() {
-	for i := 0; i < BoardSize; i++ {
-		for j := 0; j < BoardSize; j++ {
-			if !b.isRowColEmpty(i, j) && b[i][j].justMoved {
-				(*b)[i][j].justMoved = false
-			}
+	if isTakingEnPassant(b[toRow][toCol], fromCol, toCol, isDestinationSquareEmpty) {
+		if toRow > fromRow {
+			b.setSquareEmpty(toRow-1, toCol)
+		} else {
+			b.setSquareEmpty(toRow+1, toCol)
 		}
 	}
 }
@@ -170,7 +169,14 @@ func moveCastledRook(b *board, row int, kingCol int) {
 		newSquare = square{rank: BoardSize - row, file: toFileStr(kingCol + 1)}
 	}
 
+	fmt.Println("moving rook", currentSquare, newSquare)
 	b.movePiece(currentSquare, newSquare)
+}
+
+func isTakingEnPassant(gp gamePiece, fromCol int, toCol int, isDestinationSquareEmpty bool) bool {
+	return gp.getName() == "P" &&
+		math.Abs(float64(fromCol)-float64(toCol)) == 1 &&
+		isDestinationSquareEmpty
 }
 
 func (b *board) setSquareEmpty(row int, col int) {

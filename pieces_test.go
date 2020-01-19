@@ -64,6 +64,45 @@ func TestPawnGetLegalSquares(t *testing.T) {
 		t.Errorf("Expected white pawn on second rank with takeable piece to have %d legal moves, but got: %d (%v)", expectedCount, len(res), res)
 	}
 	b.init()
+
+	// Test: pawn can take en passant
+	b.movePiece(square{file: "E", rank: 2}, square{file: "E", rank: 4})
+	b.movePiece(square{file: "A", rank: 7}, square{file: "A", rank: 6})
+	b.movePiece(square{file: "E", rank: 4}, square{file: "E", rank: 5})
+	b.movePiece(square{file: "F", rank: 7}, square{file: "F", rank: 5})
+	sq = square{file: "E", rank: 5}
+	res = p.getLegalSquares(b, sq, "W", false)
+	expectedCount = 2
+	if len(res) != expectedCount {
+		t.Errorf("Expected white pawn that can take en passant to have %d legal moves, but got: %d (%v)", expectedCount, len(res), res)
+	}
+	b.init()
+
+	// Test: pawn cannot take en passant if there's no pawn to take
+	b.movePiece(square{file: "E", rank: 2}, square{file: "E", rank: 4})
+	b.movePiece(square{file: "A", rank: 7}, square{file: "A", rank: 6})
+	b.movePiece(square{file: "E", rank: 4}, square{file: "E", rank: 5})
+	b.movePiece(square{file: "B", rank: 7}, square{file: "B", rank: 5})
+	sq = square{file: "E", rank: 5}
+	res = p.getLegalSquares(b, sq, "W", false)
+	expectedCount = 1
+	if len(res) != expectedCount {
+		t.Errorf("Expected white pawn that with no pawn to take en passant to have %d legal moves, but got: %d (%v)", expectedCount, len(res), res)
+	}
+	b.init()
+
+	// Test: pawn cannot take en passant if there is a pawn to take but it's not just moved from it's inital square
+	b.movePiece(square{file: "E", rank: 2}, square{file: "E", rank: 4})
+	b.movePiece(square{file: "F", rank: 7}, square{file: "F", rank: 6})
+	b.movePiece(square{file: "E", rank: 4}, square{file: "E", rank: 5})
+	b.movePiece(square{file: "F", rank: 6}, square{file: "F", rank: 5})
+	sq = square{file: "E", rank: 5}
+	res = p.getLegalSquares(b, sq, "W", false)
+	expectedCount = 1
+	if len(res) != expectedCount {
+		t.Errorf("Expected white pawn with pawn that could take en passent if it had just moved to have %d legal moves, but got: %d (%v)", expectedCount, len(res), res)
+	}
+	b.init()
 }
 
 func TestRookGetLegalSquares(t *testing.T) {
